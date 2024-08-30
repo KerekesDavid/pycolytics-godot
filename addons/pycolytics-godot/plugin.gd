@@ -6,7 +6,7 @@ const DEFAULT_API_KEY := "I-am-an-unsecure-dev-key-REPLACE_ME"
 const DEFAULT_SERVER_URL := "http://127.0.0.1:8000/v1.0/events"
 
 
-func _enter_tree():
+func _enter_tree() -> void:
 	var setting_name := &"addons/pycolithics/api_key"
 	if not ProjectSettings.has_setting(setting_name):
 		ProjectSettings.set_setting(setting_name, DEFAULT_API_KEY)
@@ -41,5 +41,5 @@ func _enter_tree():
 	find_child(AUTOLOAD_NAME)._plugin = self
 
 
-func _exit_tree():
+func _exit_tree() -> void:
 	remove_autoload_singleton(AUTOLOAD_NAME)

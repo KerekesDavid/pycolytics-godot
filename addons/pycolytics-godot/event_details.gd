@@ -14,6 +14,22 @@ extends Resource
 static func copy_default() -> PycoEventDetails:
 	return PycoLog.default_event_details.duplicate()
 
+func merge(event_details:PycoEventDetails) -> PycoEventDetails:
+	for p in event_details.get_property_list():
+		if p["usage"] & PROPERTY_USAGE_SCRIPT_VARIABLE:
+			var value:Variant = event_details.get(p[&"name"])
+			match typeof(value):
+				Variant.Type.TYPE_STRING:
+					if value == '':
+						continue
+				Variant.Type.TYPE_OBJECT:
+					if value == null:
+						continue
+				Variant.Type.TYPE_DICTIONARY:
+					if value == {}:
+						continue
+			set(p[&"name"], value)
+	return self
 
 func to_json() -> String:
 	var property_strings:PackedStringArray
