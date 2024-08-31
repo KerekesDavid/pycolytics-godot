@@ -5,7 +5,7 @@ A Godot 4.3 plugin for interfacing with pycolytics, a tiny open source event log
 
 ## Getting Started
 - Install [pycolytics](https://github.com/KerekesDavid/pycolytics) on a local machine, or a remote server. 
-- Install pycolytics-godot directly from the Godot asset store, or by copying the addons folder in this repository into your project root.
+- Install this addon by copying the addons folder in this repository into your project root folder. (Coming to the Godot asset library soon!)
 - Enable the pycolytics-godot under `ProjectSettings/Plugins`
 - Use `PycoLog.log_event(...)` to log your events.
 
@@ -18,6 +18,8 @@ For more examples, see [examples/example.gd](example/example.gd), or open up [ex
 - __Automatic batched submission:__ Minimal performance impact.
 - __Autoload included:__ For convinient logging.
 - __Built-in startup and shutdown events.__ With customizable callbacks.
+- __Automatic user-id and session-id generation.__
+
 
 ## Contibuting
 Open an issue if you wish to contribute, or buy me a coffe if you find my work useful.
