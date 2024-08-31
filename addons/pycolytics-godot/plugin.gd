@@ -3,7 +3,7 @@ extends EditorPlugin
 
 const AUTOLOAD_NAME = "PycoLog"
 const DEFAULT_API_KEY := "I-am-an-unsecure-dev-key-REPLACE_ME"
-const DEFAULT_SERVER_URL := "http://127.0.0.1:8000/v1.0/events"
+const DEFAULT_SERVER_URL := "http://127.0.0.1:8000/"
 
 
 func _enter_tree() -> void:

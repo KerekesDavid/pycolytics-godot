@@ -1,14 +1,20 @@
 extends Node
 
-var _request_pool: Array[AwaitableHTTPRequest]
 const _Pycolytics = preload("plugin.gd")
 var _plugin:_Pycolytics
+var _event_queue:Array[PycoEventDetails]
+var _http_request:AwaitableHTTPRequest
+var _shutdown_initiated:bool = false
+var _last_flush:float
+var _url_suffix:String = "v1.0/events"
 
-var concurrent_requests = 64
+var flush_period_msec:float = 200.0
 var default_event_details:PycoEventDetails = PycoEventDetails.new()
-var url:String = _plugin.DEFAULT_SERVER_URL
+var url:String = _plugin.DEFAULT_SERVER_URL + _url_suffix
 var startup_callable:Callable
 var shutdown_callable:Callable
+
+signal shutdown_event_sent
 
 
 func _ready() -> void:
@@ -24,16 +30,29 @@ func _ready() -> void:
 	startup_callable = _get_startup_event
 	shutdown_callable = _get_shutdown_event
 	
-	for i in range(concurrent_requests):
-		_request_pool.push_back(_create_request())
-		
+	_http_request = _create_request()
+	
 	_log_startup.call_deferred()
+
+
+func _process(_delta: float) -> void:
+	if (_event_queue.size() > 0
+	&& !_http_request.is_requesting
+	&& Time.get_ticks_msec() - _last_flush > flush_period_msec):
+		_last_flush = Time.get_ticks_msec()
+		_flush_queue()
 
 
 func _notification(what) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		if _http_request.is_requesting:
+			await _http_request.request_finished
 		if shutdown_callable != null:
 			log_event_from_details(shutdown_callable.call())
+		_shutdown_initiated = true
+		_flush_queue()
+		await _http_request.request_finished
+		shutdown_event_sent.emit()
 
 
 func _log_startup() -> void:
@@ -55,7 +74,7 @@ func _sync_project_settings() -> void:
 	else:
 		default_event_details.api_key = _plugin.DEFAULT_API_KEY
 	if ProjectSettings.has_setting(&"addons/pycolithics/server_url"):
-		url = ProjectSettings.get_setting_with_override(&"addons/pycolithics/server_url")
+		url = ProjectSettings.get_setting_with_override(&"addons/pycolithics/server_url") + _url_suffix
 
 
 func _get_startup_event() -> PycoEventDetails:
@@ -78,17 +97,21 @@ func log_event(event_type:String, value:Dictionary = {}) -> void:
 
 
 func log_event_from_details(event_details:PycoEventDetails) -> void:
-	var result: AwaitableHTTPRequest.HTTPResult = null
-	var request: AwaitableHTTPRequest
-	for r in _request_pool:
-		if !r.is_requesting:
-			request = r
-	if request == null:
-		push_warning("Too many requests in queue, dropped event ", event_details.to_json())
-		return
-		
-	var body:String = event_details.to_json()		
-	result = await request.async_request(self.url, PackedStringArray(), HTTPClient.Method.METHOD_POST, body)
+	if !_shutdown_initiated:
+		_event_queue.push_back(event_details)
+	#else:
+		#print(
+			#"PycoLog: Events logged after NOTIFICATION_WM_CLOSE_REQUEST are ignored: ",
+			#event_details.to_json()
+		#)
+
+func _flush_queue():
+	var json_array:PackedStringArray
+	for event_details in _event_queue:
+		json_array.append(event_details.to_json())
+	var body:String = "[" + ",".join(json_array) + "]"
+	_event_queue.clear()
+	var result := await _http_request.async_request(url, PackedStringArray(), HTTPClient.Method.METHOD_POST, body)
 	
 	if result._error:
 		push_warning(
@@ -97,7 +120,7 @@ func log_event_from_details(event_details:PycoEventDetails) -> void:
 		)
 	elif result._result:
 		push_warning(
-			"\nPycoLog: error while making a HTTP request:",
+			"\nPycoLog: error while making a HTTP request to ", url,
 			"\n    Result code ", result._result, ": ", result.result_message,
 			"\n    HTTP status code: ", result.status_code,
 			"\n    Respose Headers: ", result.headers,
@@ -105,7 +128,7 @@ func log_event_from_details(event_details:PycoEventDetails) -> void:
 		)
 	elif result.status_code > 400:
 		push_warning(
-			"\nPycoLog: Error reply from server:",
+			"\nPycoLog: Error reply from server ", url,
 			"\n    HTTP status code: ", result.status_code,
 			"\n    Respose Headers: ", result.headers,
 			"\n    Response Body: ", result.body,
