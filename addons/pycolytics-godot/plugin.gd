@@ -7,7 +7,8 @@ const DEFAULT_SERVER_URL := "http://127.0.0.1:8000/"
 
 
 func _enter_tree() -> void:
-	var setting_name := &"addons/pycolithics/api_key"
+	var setting_name := &"addons/pycolythics/api_key"
+	get_editor_interface().get_editor_settings()
 	if not ProjectSettings.has_setting(setting_name):
 		ProjectSettings.set_setting(setting_name, DEFAULT_API_KEY)
 	ProjectSettings.set_initial_value(setting_name, DEFAULT_API_KEY)
@@ -19,7 +20,7 @@ func _enter_tree() -> void:
 		"doc": "API key to use when connecting to the server."
 	})
 	
-	setting_name = &"addons/pycolithics/server_url"
+	setting_name = &"addons/pycolythics/server_url"
 	if not ProjectSettings.has_setting(setting_name):
 		ProjectSettings.set_setting(setting_name, DEFAULT_SERVER_URL)
 	ProjectSettings.set_initial_value(setting_name, DEFAULT_SERVER_URL)
@@ -31,14 +32,12 @@ func _enter_tree() -> void:
 		"doc": "URL to a pytholytics server."
 	})
 	
-	var a = ProjectSettings.get_setting_with_override(&"addons/pycolithics/api_key")
-	print(a)
+	var a = ProjectSettings.get_setting_with_override(&"addons/pycolythics/api_key")
 	
 	var error: int = ProjectSettings.save()
 	if error: push_error("Encountered error %d when saving project settings." % error)
 	
 	add_autoload_singleton(AUTOLOAD_NAME, "pyco_log.gd")
-	find_child(AUTOLOAD_NAME)._plugin = self
 
 
 func _exit_tree() -> void:

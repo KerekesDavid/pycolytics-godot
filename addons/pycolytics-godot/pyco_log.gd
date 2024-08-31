@@ -1,7 +1,6 @@
 extends Node
 
-const _Pycolytics = preload("plugin.gd")
-var _plugin:_Pycolytics
+const _Plugin = preload("plugin.gd")
 var _event_queue:Array[PycoEventDetails]
 var _http_request:AwaitableHTTPRequest
 var _shutdown_initiated:bool = false
@@ -9,8 +8,9 @@ var _last_flush:float
 var _url_suffix:String = "v1.0/events"
 
 var flush_period_msec:float = 200.0
+var queue_limit:int = 12
 var default_event_details:PycoEventDetails = PycoEventDetails.new()
-var url:String = _plugin.DEFAULT_SERVER_URL + _url_suffix
+var url:String = _Plugin.DEFAULT_SERVER_URL + _url_suffix
 var startup_callable:Callable
 var shutdown_callable:Callable
 
@@ -19,7 +19,6 @@ signal shutdown_event_sent
 
 func _ready() -> void:
 	ProjectSettings.settings_changed.connect(_sync_project_settings)
-	
 	_sync_project_settings()
 	default_event_details.application = ProjectSettings.get_setting_with_override(&"application/config/name")
 	default_event_details.platform =  OS.get_name()
@@ -69,12 +68,12 @@ func _create_request() -> AwaitableHTTPRequest:
 
 
 func _sync_project_settings() -> void:
-	if ProjectSettings.has_setting(&"addons/pycolithics/api_key"):
-		default_event_details.api_key = ProjectSettings.get_setting_with_override(&"addons/pycolithics/api_key")
+	if ProjectSettings.has_setting(&"addons/pycolythics/api_key"):
+		default_event_details.api_key = ProjectSettings.get_setting_with_override(&"addons/pycolythics/api_key")
 	else:
-		default_event_details.api_key = _plugin.DEFAULT_API_KEY
-	if ProjectSettings.has_setting(&"addons/pycolithics/server_url"):
-		url = ProjectSettings.get_setting_with_override(&"addons/pycolithics/server_url") + _url_suffix
+		default_event_details.api_key = _Plugin.DEFAULT_API_KEY
+	if ProjectSettings.has_setting(&"addons/pycolythics/server_url"):
+		url = ProjectSettings.get_setting_with_override(&"addons/pycolythics/server_url") + _url_suffix
 
 
 func _get_startup_event() -> PycoEventDetails:
@@ -99,8 +98,10 @@ func log_event(event_type:String, value:Dictionary = {}) -> void:
 func log_event_from_details(event_details:PycoEventDetails) -> void:
 	if !_shutdown_initiated:
 		_event_queue.push_back(event_details)
+		if _event_queue.size() > queue_limit:
+			_flush_queue()
 	#else:
-		#print(
+		#push_warning(
 			#"PycoLog: Events logged after NOTIFICATION_WM_CLOSE_REQUEST are ignored: ",
 			#event_details.to_json()
 		#)
