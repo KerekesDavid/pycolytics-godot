@@ -10,7 +10,6 @@ var _url_suffix:String = "v1.0/events"
 var flush_period_msec:float = 2000.0  ## Send batched events to server at least this often.
 var queue_limit:int = 12  ## Send a batch of events if the queue is at least this long. Helps avoid frame stutter from too many events.
 var request_timeout:float = 3.0  ## Number of seconds after which the event logging requests timeout. Will result in lost events.
-var default_event:PycoEvent = PycoEvent.new()  ## All auto-generated events are based on this instance.
 var url:String = _Plugin.DEFAULT_SERVER_URL + _url_suffix  ## The exact server url for accepting batch requests (eg. inckuding "v1.0/events").
 var startup_callable:Callable  ## Callable returning a PycoEvent to send after the zeroeth frame. Set to null to disable.
 var shutdown_callable:Callable  ## Callable returning a PycoEvent to send on NOTIFICATION_WM_CLOSE_REQUEST. Set to null to disable.
@@ -21,11 +20,11 @@ signal shutdown_event_sent  ## Emitted after the shutdown event defined by shutd
 func _ready() -> void:
 	ProjectSettings.settings_changed.connect(_sync_project_settings)
 	_sync_project_settings()
-	default_event.application = ProjectSettings.get_setting_with_override(&"application/config/name")
-	default_event.platform =  OS.get_name()
-	default_event.version = ProjectSettings.get_setting_with_override(&"application/config/version")
-	default_event.user_id = OS.get_unique_id()
-	default_event.session_id = "%x" % hash(OS.get_unique_id() + str(Time.get_unix_time_from_system()))
+	PycoEvent.default_event.application = ProjectSettings.get_setting_with_override(&"application/config/name")
+	PycoEvent.default_event.platform =  OS.get_name()
+	PycoEvent.default_event.version = ProjectSettings.get_setting_with_override(&"application/config/version")
+	PycoEvent.default_event.user_id = OS.get_unique_id()
+	PycoEvent.default_event.session_id = "%x" % hash(OS.get_unique_id() + str(Time.get_unix_time_from_system()))
 	
 	startup_callable = _get_startup_event
 	shutdown_callable = _get_shutdown_event
@@ -40,7 +39,7 @@ func _process(_delta: float) -> void:
 		_flush_queue()
 
 
-func _notification(what) -> void:
+func _notification(what:int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		if _http_request.is_requesting:
 			await _http_request.request_finished
@@ -58,7 +57,7 @@ func _log_startup() -> void:
 
 
 func _create_request() -> AwaitableHTTPRequest:
-	var http_request = AwaitableHTTPRequest.new()
+	var http_request := AwaitableHTTPRequest.new()
 	add_child(http_request)
 	#http_request.use_threads = true
 	http_request.timeout = request_timeout
@@ -67,9 +66,9 @@ func _create_request() -> AwaitableHTTPRequest:
 
 func _sync_project_settings() -> void:
 	if ProjectSettings.has_setting(&"addons/pycolythics/api_key"):
-		default_event.api_key = ProjectSettings.get_setting_with_override(&"addons/pycolythics/api_key")
+		PycoEvent.default_event.api_key = ProjectSettings.get_setting_with_override(&"addons/pycolythics/api_key")
 	else:
-		default_event.api_key = _Plugin.DEFAULT_API_KEY
+		PycoEvent.default_event.api_key = _Plugin.DEFAULT_API_KEY
 	if ProjectSettings.has_setting(&"addons/pycolythics/server_url"):
 		url = ProjectSettings.get_setting_with_override(&"addons/pycolythics/server_url") + _url_suffix
 
@@ -106,7 +105,7 @@ func log_event(pyco_event:PycoEvent) -> void:
 			#pyco_event.to_json()
 		#)
 
-func _flush_queue():
+func _flush_queue() -> void:
 	if _event_queue.size() == 0 || _http_request.is_requesting:
 		return
 		

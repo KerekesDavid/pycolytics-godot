@@ -10,28 +10,30 @@ extends Resource
 @export var value:Dictionary
 @export var api_key:String
 
+static var default_event:PycoEvent = PycoEvent.new()  ## All auto-generated events are based on this instance.
+
 
 ## Creates a copy of the default event, use this with merge() to create customized events.
 static func copy_default() -> PycoEvent:
-	return PycoLog.default_event.duplicate()
+	return default_event.duplicate()
 
 
 ## Overrides the fields of self with the non-empty fields of the parameter pyco_event
 func merge(pyco_event:PycoEvent) -> PycoEvent:
 	for p in pyco_event.get_property_list():
 		if p["usage"] & PROPERTY_USAGE_SCRIPT_VARIABLE:
-			var value:Variant = pyco_event.get(p[&"name"])
-			match typeof(value):
+			var v:Variant = pyco_event.get(p[&"name"])
+			match typeof(v):
 				Variant.Type.TYPE_STRING:
-					if value == '':
+					if v == '':
 						continue
 				Variant.Type.TYPE_OBJECT:
-					if value == null:
+					if v == null:
 						continue
 				Variant.Type.TYPE_DICTIONARY:
-					if value == {}:
+					if v == {}:
 						continue
-			set(p[&"name"], value)
+			set(p[&"name"], v)
 	return self
 
 

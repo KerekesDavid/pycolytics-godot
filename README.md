@@ -7,10 +7,10 @@ _Requires Godot 4.2+_
 
 
 ## Getting Started
-- Install this addon from the [asset library](https://godotengine.org/asset-library/asset/3292), or by copying the addons folder from this repository into your project root folder.
+- Install this plugin from the [asset library](https://godotengine.org/asset-library/asset/3292), or by copying the addons folder from this repository into your project root folder.
+- Enable the plugin (`pycolytics-godot`) under `ProjectSettings/Plugins`.
 - Install [pycolytics](https://github.com/KerekesDavid/pycolytics) on a local machine, or a remote server.
-- Enable the pycolytics-godot under `ProjectSettings/Plugins`
-- Use `PycoLog.log_event(...)` to log your events.
+- Use the `PycoLog` autoload, for exmple `PycoLog.log_event(...)` to log your events.
 
 For more examples, see [examples/example.gd](example/example.gd), or open up [example.tscn](example/example.tscn) in Godot!
 
