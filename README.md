@@ -11,7 +11,7 @@ A Godot 4.3 plugin for interfacing with pycolytics, a tiny open source event log
 
 For more examples, see [examples/example.gd](example/example.gd), or open up [example.tscn](example/example.tscn) in Godot!
 
-![The simplest way to log an event.](example_screenshot.png)
+![The simplest way to log an event.](screenshots/example_screenshot.png)
 
 ## Key Features
 - __Event properties are resources:__ You can export them, reuse them, set them from the editor!
@@ -22,7 +22,7 @@ For more examples, see [examples/example.gd](example/example.gd), or open up [ex
 
 
 ## Contibuting
-Open an issue if you wish to contribute, or buy me a coffe if you find my work useful.
+Open an issue if you wish to contribute, or buy me a coffee if you find my work useful.
 
 <a href='https://ko-fi.com/E1E712JJXK' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi3.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
 

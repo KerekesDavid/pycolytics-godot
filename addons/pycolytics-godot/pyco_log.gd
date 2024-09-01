@@ -35,10 +35,7 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	if (_event_queue.size() > 0
-	&& !_http_request.is_requesting
-	&& Time.get_ticks_msec() - _last_flush > flush_period_msec):
-		_last_flush = Time.get_ticks_msec()
+	if Time.get_ticks_msec() - _last_flush > flush_period_msec:
 		_flush_queue()
 
 
@@ -107,6 +104,10 @@ func log_event_from_details(event_details:PycoEventDetails) -> void:
 		#)
 
 func _flush_queue():
+	if _event_queue.size() == 0 || _http_request.is_requesting:
+		return
+		
+	_last_flush = Time.get_ticks_msec()
 	var json_array:PackedStringArray
 	for event_details in _event_queue:
 		json_array.append(event_details.to_json())
