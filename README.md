@@ -1,7 +1,7 @@
-# pycolytics-godot
-A Godot 4.3 plugin for interfacing with pycolytics, a tiny open source event logging webservice. By default it provides anonymized event logging with a single function call.
+# Pycolitycs Godot Client - Event Analytics
+A Godot plugin for interfacing with [pycolytics](https://github.com/KerekesDavid/pycolytics), a tiny open source event logging webservice. It provides anonymized event logging with a out of the box, with a single function call.
 
-[Pycolytics](https://github.com/KerekesDavid/pycolytics) is a tiny open source tool, made to collect software usage statistics with the least amount of hassle possible.
+I made [pycolytics](https://github.com/KerekesDavid/pycolytics) so I could collect anonymized game usage statistics with the least amount of hassle possible. No quotas, no monthly fees, no bloated software, no megacorporation spying on my user's data.
 
 ## Getting Started
 - Install [pycolytics](https://github.com/KerekesDavid/pycolytics) on a local machine, or a remote server. 

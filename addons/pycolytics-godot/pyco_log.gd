@@ -7,14 +7,15 @@ var _shutdown_initiated:bool = false
 var _last_flush:float
 var _url_suffix:String = "v1.0/events"
 
-var flush_period_msec:float = 200.0
-var queue_limit:int = 12
-var default_event:PycoEvent = PycoEvent.new()
-var url:String = _Plugin.DEFAULT_SERVER_URL + _url_suffix
-var startup_callable:Callable
-var shutdown_callable:Callable
+var flush_period_msec:float = 2000.0  ## Send batched events to server at least this often.
+var queue_limit:int = 12  ## Send a batch of events if the queue is at least this long. Helps avoid frame stutter from too many events.
+var request_timeout:float = 3.0  ## Number of seconds after which the event logging requests timeout. Will result in lost events.
+var default_event:PycoEvent = PycoEvent.new()  ## All auto-generated events are based on this instance.
+var url:String = _Plugin.DEFAULT_SERVER_URL + _url_suffix  ## The exact server url for accepting batch requests (eg. inckuding "v1.0/events").
+var startup_callable:Callable  ## Callable returning a PycoEvent to send after the zeroeth frame. Set to null to disable.
+var shutdown_callable:Callable  ## Callable returning a PycoEvent to send on NOTIFICATION_WM_CLOSE_REQUEST. Set to null to disable.
 
-signal shutdown_event_sent
+signal shutdown_event_sent  ## Emitted after the shutdown event defined by shutdown_callable was sent.
 
 
 func _ready() -> void:
@@ -60,7 +61,7 @@ func _create_request() -> AwaitableHTTPRequest:
 	var http_request = AwaitableHTTPRequest.new()
 	add_child(http_request)
 	#http_request.use_threads = true
-	http_request.timeout = 3.0
+	http_request.timeout = request_timeout
 	return http_request
 
 
@@ -85,6 +86,7 @@ func _get_shutdown_event() -> PycoEvent:
 	return event
 
 
+## Logs an event, overriding event_type and values with the provided parameters
 func log_event_by_type(event_type:String, value:Dictionary = {}) -> void:
 	var event:PycoEvent = PycoEvent.copy_default()
 	event.event_type = event_type
@@ -92,11 +94,12 @@ func log_event_by_type(event_type:String, value:Dictionary = {}) -> void:
 	log_event(event)
 
 
+## Logs an event. Use PycoEvent.copy_default().merge(...) to selectively override event properties.
 func log_event(pyco_event:PycoEvent) -> void:
 	if !_shutdown_initiated:
 		_event_queue.push_back(pyco_event)
 		if _event_queue.size() > queue_limit:
-			_flush_queue()
+			_flush_queue.call_deferred()
 	#else:
 		#push_warning(
 			#"PycoLog: Events logged after NOTIFICATION_WM_CLOSE_REQUEST are ignored: ",
