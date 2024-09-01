@@ -1,13 +1,13 @@
 extends Node2D
 
-@export var pyco_event:PycoEventDetails
+@export var pyco_event:PycoEvent
 
 
 func _ready() -> void:
-	# Setting a startup_callable returning a PycoEventDetails before
+	# Setting a startup_callable returning a PycoEvent before
 	# the end of the first frame allows for a costumized startup event
-	PycoLog.startup_callable = func() -> PycoEventDetails: 
-		var e := PycoEventDetails.copy_default()
+	PycoLog.startup_callable = func() -> PycoEvent: 
+		var e := PycoEvent.copy_default()
 		e.event_type = "startup"
 		e.value = {"custom_startup_message": 42}
 		return e
@@ -20,13 +20,13 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	# PycoEventDetails.merge() lets you override values in a PycoEventDetails
-	PycoLog.log_event_from_details(PycoEventDetails.copy_default().merge(pyco_event))
+	# PycoEvent.merge() lets you override values in a PycoEvent
+	PycoLog.log_event(PycoEvent.copy_default().merge(pyco_event))
 
 
 func _process(delta: float) -> void:
 	# The simplest way to log an event
-	PycoLog.log_event("process_event", {"delta": delta})
+	PycoLog.log_event_by_type("process_event", {"delta": delta})
 
 
 func _input(event: InputEvent) -> void:

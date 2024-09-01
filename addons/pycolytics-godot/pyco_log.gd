@@ -1,7 +1,7 @@
 extends Node
 
 const _Plugin = preload("plugin.gd")
-var _event_queue:Array[PycoEventDetails]
+var _event_queue:Array[PycoEvent]
 var _http_request:AwaitableHTTPRequest
 var _shutdown_initiated:bool = false
 var _last_flush:float
@@ -9,7 +9,7 @@ var _url_suffix:String = "v1.0/events"
 
 var flush_period_msec:float = 200.0
 var queue_limit:int = 12
-var default_event_details:PycoEventDetails = PycoEventDetails.new()
+var default_event:PycoEvent = PycoEvent.new()
 var url:String = _Plugin.DEFAULT_SERVER_URL + _url_suffix
 var startup_callable:Callable
 var shutdown_callable:Callable
@@ -20,11 +20,11 @@ signal shutdown_event_sent
 func _ready() -> void:
 	ProjectSettings.settings_changed.connect(_sync_project_settings)
 	_sync_project_settings()
-	default_event_details.application = ProjectSettings.get_setting_with_override(&"application/config/name")
-	default_event_details.platform =  OS.get_name()
-	default_event_details.version = ProjectSettings.get_setting_with_override(&"application/config/version")
-	default_event_details.user_id = OS.get_unique_id()
-	default_event_details.session_id = "%x" % hash(OS.get_unique_id() + str(Time.get_unix_time_from_system()))
+	default_event.application = ProjectSettings.get_setting_with_override(&"application/config/name")
+	default_event.platform =  OS.get_name()
+	default_event.version = ProjectSettings.get_setting_with_override(&"application/config/version")
+	default_event.user_id = OS.get_unique_id()
+	default_event.session_id = "%x" % hash(OS.get_unique_id() + str(Time.get_unix_time_from_system()))
 	
 	startup_callable = _get_startup_event
 	shutdown_callable = _get_shutdown_event
@@ -44,7 +44,7 @@ func _notification(what) -> void:
 		if _http_request.is_requesting:
 			await _http_request.request_finished
 		if shutdown_callable != null:
-			log_event_from_details(shutdown_callable.call())
+			log_event(shutdown_callable.call())
 		_shutdown_initiated = true
 		_flush_queue()
 		await _http_request.request_finished
@@ -53,7 +53,7 @@ func _notification(what) -> void:
 
 func _log_startup() -> void:
 	if startup_callable != null:
-		log_event_from_details(startup_callable.call())
+		log_event(startup_callable.call())
 
 
 func _create_request() -> AwaitableHTTPRequest:
@@ -66,41 +66,41 @@ func _create_request() -> AwaitableHTTPRequest:
 
 func _sync_project_settings() -> void:
 	if ProjectSettings.has_setting(&"addons/pycolythics/api_key"):
-		default_event_details.api_key = ProjectSettings.get_setting_with_override(&"addons/pycolythics/api_key")
+		default_event.api_key = ProjectSettings.get_setting_with_override(&"addons/pycolythics/api_key")
 	else:
-		default_event_details.api_key = _Plugin.DEFAULT_API_KEY
+		default_event.api_key = _Plugin.DEFAULT_API_KEY
 	if ProjectSettings.has_setting(&"addons/pycolythics/server_url"):
 		url = ProjectSettings.get_setting_with_override(&"addons/pycolythics/server_url") + _url_suffix
 
 
-func _get_startup_event() -> PycoEventDetails:
-	var event_details := PycoEventDetails.copy_default()
-	event_details.event_type = "startup"
-	return event_details
+func _get_startup_event() -> PycoEvent:
+	var event := PycoEvent.copy_default()
+	event.event_type = "startup"
+	return event
 
 
-func _get_shutdown_event() -> PycoEventDetails:
-	var event_details := PycoEventDetails.copy_default()
-	event_details.event_type = "shutdown"
-	return event_details
+func _get_shutdown_event() -> PycoEvent:
+	var event := PycoEvent.copy_default()
+	event.event_type = "shutdown"
+	return event
 
 
-func log_event(event_type:String, value:Dictionary = {}) -> void:
-	var details:PycoEventDetails = PycoEventDetails.copy_default()
-	details.event_type = event_type
-	details.value = value
-	log_event_from_details(details)
+func log_event_by_type(event_type:String, value:Dictionary = {}) -> void:
+	var event:PycoEvent = PycoEvent.copy_default()
+	event.event_type = event_type
+	event.value = value
+	log_event(event)
 
 
-func log_event_from_details(event_details:PycoEventDetails) -> void:
+func log_event(pyco_event:PycoEvent) -> void:
 	if !_shutdown_initiated:
-		_event_queue.push_back(event_details)
+		_event_queue.push_back(pyco_event)
 		if _event_queue.size() > queue_limit:
 			_flush_queue()
 	#else:
 		#push_warning(
 			#"PycoLog: Events logged after NOTIFICATION_WM_CLOSE_REQUEST are ignored: ",
-			#event_details.to_json()
+			#pyco_event.to_json()
 		#)
 
 func _flush_queue():
@@ -109,8 +109,8 @@ func _flush_queue():
 		
 	_last_flush = Time.get_ticks_msec()
 	var json_array:PackedStringArray
-	for event_details in _event_queue:
-		json_array.append(event_details.to_json())
+	for event in _event_queue:
+		json_array.append(event.to_json())
 	var body:String = "[" + ",".join(json_array) + "]"
 	_event_queue.clear()
 	var result := await _http_request.async_request(url, PackedStringArray(), HTTPClient.Method.METHOD_POST, body)

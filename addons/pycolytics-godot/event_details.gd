@@ -1,4 +1,4 @@
-class_name PycoEventDetails
+class_name PycoEvent
 extends Resource
 
 @export var event_type:String
@@ -11,13 +11,13 @@ extends Resource
 @export var api_key:String
 
 
-static func copy_default() -> PycoEventDetails:
-	return PycoLog.default_event_details.duplicate()
+static func copy_default() -> PycoEvent:
+	return PycoLog.default_event.duplicate()
 
-func merge(event_details:PycoEventDetails) -> PycoEventDetails:
-	for p in event_details.get_property_list():
+func merge(pyco_event:PycoEvent) -> PycoEvent:
+	for p in pyco_event.get_property_list():
 		if p["usage"] & PROPERTY_USAGE_SCRIPT_VARIABLE:
-			var value:Variant = event_details.get(p[&"name"])
+			var value:Variant = pyco_event.get(p[&"name"])
 			match typeof(value):
 				Variant.Type.TYPE_STRING:
 					if value == '':
