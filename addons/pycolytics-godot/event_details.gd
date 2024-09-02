@@ -20,27 +20,34 @@ static func copy_default() -> PycoEvent:
 
 ## Overrides the fields of self with the non-empty fields of the parameter pyco_event
 func merge(pyco_event:PycoEvent) -> PycoEvent:
-	for p in pyco_event.get_property_list():
-		if p["usage"] & PROPERTY_USAGE_SCRIPT_VARIABLE:
-			var v:Variant = pyco_event.get(p[&"name"])
-			match typeof(v):
-				Variant.Type.TYPE_STRING:
-					if v == '':
-						continue
-				Variant.Type.TYPE_OBJECT:
-					if v == null:
-						continue
-				Variant.Type.TYPE_DICTIONARY:
-					if v == {}:
-						continue
-			set(p[&"name"], v)
+	if pyco_event.event_type:
+		event_type = pyco_event.event_type
+	if pyco_event.application:
+		application = pyco_event.application
+	if pyco_event.version:
+		version = pyco_event.version
+	if pyco_event.platform:
+		platform = pyco_event.platform
+	if pyco_event.user_id:
+		user_id = pyco_event.user_id
+	if pyco_event.session_id:
+		session_id = pyco_event.session_id
+	if pyco_event.value:
+		value = pyco_event.value
+	if pyco_event.api_key:
+		api_key = pyco_event.api_key
 	return self
 
 
 func to_json() -> String:
 	var property_strings:PackedStringArray
-	for p in get_property_list():
-		if p["usage"] & PROPERTY_USAGE_SCRIPT_VARIABLE:
-			property_strings.push_back(JSON.stringify(p[&"name"]) + ":" + JSON.stringify(get(p[&"name"])))
-	var json:String = "{" + ", ".join(property_strings) + "}"
+	property_strings.append('"event_type":' + JSON.stringify(event_type))
+	property_strings.append('"application":' + JSON.stringify(application))
+	property_strings.append('"version":' + JSON.stringify(version))
+	property_strings.append('"platform":' + JSON.stringify(platform))
+	property_strings.append('"user_id":' + JSON.stringify(user_id))
+	property_strings.append('"session_id":' + JSON.stringify(session_id))
+	property_strings.append('"value":' + JSON.stringify(value))
+	property_strings.append('"api_key":' + JSON.stringify(api_key))
+	var json:String = "{" + ",".join(property_strings) + "}"
 	return json

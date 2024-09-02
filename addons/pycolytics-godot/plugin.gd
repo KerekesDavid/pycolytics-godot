@@ -8,7 +8,7 @@ const DEFAULT_SERVER_URL := "http://127.0.0.1:8000/"
 
 func _enter_tree() -> void:
 	var setting_name := &"addons/pycolythics/api_key"
-	get_editor_interface().get_editor_settings()
+	EditorInterface.get_editor_settings()
 	if not ProjectSettings.has_setting(setting_name):
 		ProjectSettings.set_setting(setting_name, DEFAULT_API_KEY)
 	ProjectSettings.set_initial_value(setting_name, DEFAULT_API_KEY)
