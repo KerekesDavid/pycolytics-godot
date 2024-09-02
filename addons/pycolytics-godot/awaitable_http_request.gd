@@ -1,5 +1,10 @@
+# MIT License (see LICENSE.md)
+# 
+# Copyright (c) 2024 Swarkin & Kerekes Dávid
+
 class_name AwaitableHTTPRequest
 extends HTTPRequest
+## Code adapted by Kerekes Dávid from:
 ## Awaitable HTTP Request Node v1.6.0 by swark1n & [url=https://github.com/Swarkin/Godot-AwaitableHTTPRequest/graphs/contributors]contributors[/url].
 
 signal request_finished		## Emits once the current request finishes, right after [member is_requesting] is set to false.
