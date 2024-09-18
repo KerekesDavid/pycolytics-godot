@@ -1,12 +1,13 @@
 extends Node2D
 
-@export var pyco_event:PycoEvent
+@export var pyco_event: PycoEvent
 
 
 func _physics_process(_delta: float) -> void:
-	# PycoEvent.merge() lets you override values in a PycoEvent.
-	# We are logging an event every frame only for demonstration purposes.
-	PycoLog.log_event(PycoEvent.copy_default().merge(pyco_event))
+	# PycoLog.log_event will merge the incoming event with the default event,
+	#   and override its values with non-empty fields from pyco_event.
+	# We are logging an event every frame here only for demonstration purposes.
+	PycoLog.log_event(pyco_event)
 
 
 func _process(delta: float) -> void:
@@ -15,17 +16,17 @@ func _process(delta: float) -> void:
 
 
 func _ready() -> void:
-	# Setting up graceful shutdown (see also the comments in _input):
+	# Setting up graceful shutdown (see also the comments in _input() below):
 	# Set auto_accept_quit to false, so PycoLog has time to send logging events.
 	get_tree().set_auto_accept_quit(false)
-	# You can trigger get_tree().quit() any time after shutdown_request_sent is emitted,
-	# Logging events after NOTIFICATION_WM_CLOSE_REQUEST are not sent to the server.
+	# You can trigger get_tree().quit() any time after shutdown_request_sent is emitted.
+	# Events logged after NOTIFICATION_WM_CLOSE_REQUEST is recieved are not sent to the server.
 	PycoLog.shutdown_event_sent.connect(get_tree().quit)
 
-	# Customizing thestartup event:
+	# Customizing the startup event:
 	# Setting a startup_callable (returning a PycoEvent) before the
-	#   end of the first frame lets you customize the startup event,
-	PycoLog.startup_callable = func() -> PycoEvent: 
+	#   end of the first frame lets you customize the startup event.
+	PycoLog.startup_callable = func() -> PycoEvent:
 		var e := PycoEvent.copy_default()
 		e.event_type = "startup"
 		e.value = {"custom_startup_message": 42}
