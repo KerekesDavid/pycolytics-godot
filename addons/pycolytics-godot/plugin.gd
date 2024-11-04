@@ -6,7 +6,7 @@ const DEFAULT_API_KEY := "I-am-an-unsecure-dev-key-REPLACE_ME"
 const DEFAULT_SERVER_URL := "http://127.0.0.1:8000/"
 const API_KEY_SETTING := &"addons/pycolytics/api_key"
 const SERVER_URL_SETTING := &"addons/pycolytics/server_url"
-
+const HASH_SALT_SETTING := &"addons/pycolytics/hash_salt"
 
 func _enter_tree() -> void:
 	EditorInterface.get_editor_settings()
@@ -33,6 +33,19 @@ func _enter_tree() -> void:
 			"type": TYPE_STRING,
 			"hint": PROPERTY_HINT_NONE,
 			"doc": "URL to a pycolytics server."
+		}
+	)
+
+	if not ProjectSettings.has_setting(HASH_SALT_SETTING):
+		ProjectSettings.set_setting(HASH_SALT_SETTING, ("%x" % randi()).left(8))
+	ProjectSettings.set_as_basic(HASH_SALT_SETTING, false)
+	ProjectSettings.add_property_info(
+		{
+			"name": HASH_SALT_SETTING,
+			"type": TYPE_STRING,
+			"hint": PROPERTY_HINT_NONE,
+			"doc": "Salt used to generate anonymised UserIDs. \
+							Changing this will make it impossible to match with UserIDs created before the change."
 		}
 	)
 

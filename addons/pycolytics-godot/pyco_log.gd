@@ -27,9 +27,12 @@ func _ready() -> void:
 	PycoEvent.default_event.version = ProjectSettings.get_setting_with_override(
 		&"application/config/version"
 	)
-	PycoEvent.default_event.user_id = OS.get_unique_id()
+	var hash_salt := ProjectSettings.get_setting_with_override(_Plugin.HASH_SALT_SETTING)
+	PycoEvent.default_event.user_id = (
+		(str(OS.get_unique_id()) + OS.get_data_dir() + hash_salt).sha256_text().left(8)
+	)
 	PycoEvent.default_event.session_id = (
-		"%x" % hash(OS.get_unique_id() + str(Time.get_unix_time_from_system()))
+		"%x" % hash(PycoEvent.default_event.user_id + str(Time.get_unix_time_from_system()))
 	)
 
 	startup_callable = _get_startup_event
