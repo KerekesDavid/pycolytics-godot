@@ -29,7 +29,7 @@ func _enter_tree() -> void:
 		"name": setting_name,
 		"type": TYPE_STRING,
 		"hint": PROPERTY_HINT_NONE,
-		"doc": "URL to a pytholytics server."
+		"doc": "URL to a pytolytics server."
 	})
 		
 	var error: int = ProjectSettings.save()

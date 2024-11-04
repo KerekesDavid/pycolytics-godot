@@ -65,12 +65,12 @@ func _create_request() -> AwaitableHTTPRequest:
 
 
 func _sync_project_settings() -> void:
-	if ProjectSettings.has_setting(&"addons/pycolythics/api_key"):
-		PycoEvent.default_event.api_key = ProjectSettings.get_setting_with_override(&"addons/pycolythics/api_key")
+	if ProjectSettings.has_setting(&"addons/pycolytics/api_key"):
+		PycoEvent.default_event.api_key = ProjectSettings.get_setting_with_override(&"addons/pycolytics/api_key")
 	else:
 		PycoEvent.default_event.api_key = _Plugin.DEFAULT_API_KEY
-	if ProjectSettings.has_setting(&"addons/pycolythics/server_url"):
-		url = ProjectSettings.get_setting_with_override(&"addons/pycolythics/server_url") + _url_suffix
+	if ProjectSettings.has_setting(&"addons/pycolytics/server_url"):
+		url = ProjectSettings.get_setting_with_override(&"addons/pycolytics/server_url") + _url_suffix
 
 
 func _get_startup_event() -> PycoEvent:
