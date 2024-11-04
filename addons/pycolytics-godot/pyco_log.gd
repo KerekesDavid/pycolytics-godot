@@ -7,30 +7,36 @@ var _shutdown_initiated: bool = false
 var _last_flush: float
 var _url_suffix: String = "v1.0/events"
 
-var flush_period_msec: float = 2000.0 ## Send batched events to server at least this often.
-var queue_limit: int = 12 ## Send a batch of events if the queue is at least this long. Helps avoid frame stutter from too many events.
-var request_timeout: float = 3.0 ## Number of seconds after which the event logging requests timeout. Will result in lost events.
-var url: String = _Plugin.DEFAULT_SERVER_URL + _url_suffix ## The exact server url for accepting batch requests (eg. inckuding "v1.0/events").
-var startup_callable: Callable ## Callable returning a PycoEvent to send after the zeroeth frame. Set to null to disable.
-var shutdown_callable: Callable ## Callable returning a PycoEvent to send on NOTIFICATION_WM_CLOSE_REQUEST. Set to null to disable.
+var flush_period_msec: float = 2000.0  ## Send batched events to server at least this often.
+var queue_limit: int = 12  ## Send a batch of events if the queue is at least this long. Helps avoid frame stutter from too many events.
+var request_timeout: float = 3.0  ## Number of seconds after which the event logging requests timeout. Will result in lost events.
+var url: String = _Plugin.DEFAULT_SERVER_URL + _url_suffix  ## The exact server url for accepting batch requests (eg. including "v1.0/events").
+var startup_callable: Callable  ## Callable returning a PycoEvent to send after the zeroth frame. Set to null to disable.
+var shutdown_callable: Callable  ## Callable returning a PycoEvent to send on NOTIFICATION_WM_CLOSE_REQUEST. Set to null to disable.
 
-signal shutdown_event_sent ## Emitted after the shutdown event defined by shutdown_callable was sent.
+signal shutdown_event_sent  ## Emitted after the shutdown event defined by shutdown_callable was sent.
 
 
 func _ready() -> void:
 	ProjectSettings.settings_changed.connect(_sync_project_settings)
 	_sync_project_settings()
-	PycoEvent.default_event.application = ProjectSettings.get_setting_with_override(&"application/config/name")
+	PycoEvent.default_event.application = ProjectSettings.get_setting_with_override(
+		&"application/config/name"
+	)
 	PycoEvent.default_event.platform = OS.get_name()
-	PycoEvent.default_event.version = ProjectSettings.get_setting_with_override(&"application/config/version")
+	PycoEvent.default_event.version = ProjectSettings.get_setting_with_override(
+		&"application/config/version"
+	)
 	PycoEvent.default_event.user_id = OS.get_unique_id()
-	PycoEvent.default_event.session_id = "%x" % hash(OS.get_unique_id() + str(Time.get_unix_time_from_system()))
-	
+	PycoEvent.default_event.session_id = (
+		"%x" % hash(OS.get_unique_id() + str(Time.get_unix_time_from_system()))
+	)
+
 	startup_callable = _get_startup_event
 	shutdown_callable = _get_shutdown_event
-	
+
 	_http_request = _create_request()
-	
+
 	_log_startup.call_deferred()
 
 
@@ -66,11 +72,15 @@ func _create_request() -> AwaitableHTTPRequest:
 
 func _sync_project_settings() -> void:
 	if ProjectSettings.has_setting(&"addons/pycolytics/api_key"):
-		PycoEvent.default_event.api_key = ProjectSettings.get_setting_with_override(&"addons/pycolytics/api_key")
+		PycoEvent.default_event.api_key = ProjectSettings.get_setting_with_override(
+			&"addons/pycolytics/api_key"
+		)
 	else:
 		PycoEvent.default_event.api_key = _Plugin.DEFAULT_API_KEY
 	if ProjectSettings.has_setting(&"addons/pycolytics/server_url"):
-		url = ProjectSettings.get_setting_with_override(&"addons/pycolytics/server_url") + _url_suffix
+		url = (
+			ProjectSettings.get_setting_with_override(&"addons/pycolytics/server_url") + _url_suffix
+		)
 
 
 func _get_startup_event() -> PycoEvent:
@@ -121,8 +131,10 @@ func _flush_queue() -> void:
 		json_array.append(event.to_json())
 	var body: String = "[" + ",".join(json_array) + "]"
 	_event_queue.clear()
-	var result := await _http_request.async_request(url, PackedStringArray(), HTTPClient.Method.METHOD_POST, body)
-	
+	var result := await _http_request.async_request(
+		url, PackedStringArray(), HTTPClient.Method.METHOD_POST, body
+	)
+
 	if result._error:
 		push_warning(
 			"PycoLog: Error while creating HTTP connection to ", url,
