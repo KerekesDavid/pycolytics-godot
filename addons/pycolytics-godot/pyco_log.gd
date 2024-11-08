@@ -18,6 +18,8 @@ signal shutdown_event_sent  ## Emitted after the shutdown event defined by shutd
 
 
 func _ready() -> void:
+	self.process_mode = Node.PROCESS_MODE_ALWAYS
+
 	ProjectSettings.settings_changed.connect(_sync_project_settings)
 	_sync_project_settings()
 	PycoEvent.default_event.application = ProjectSettings.get_setting_with_override(
