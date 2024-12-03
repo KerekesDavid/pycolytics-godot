@@ -29,12 +29,9 @@ func _ready() -> void:
 	PycoEvent.default_event.version = ProjectSettings.get_setting_with_override(
 		&"application/config/version"
 	)
-	var hash_salt := ProjectSettings.get_setting_with_override(_Plugin.HASH_SALT_SETTING)
-	PycoEvent.default_event.user_id = (
-		(str(OS.get_unique_id()) + OS.get_data_dir() + hash_salt).sha256_text().left(8)
-	)
+	PycoEvent.default_event.user_id = _generate_user_id()
 	PycoEvent.default_event.session_id = (
-		"%x" % hash(PycoEvent.default_event.user_id + str(Time.get_unix_time_from_system()))
+		(PycoEvent.default_event.user_id + str(Time.get_unix_time_from_system())).sha256_text()
 	)
 
 	startup_callable = _get_startup_event
@@ -100,6 +97,20 @@ func _get_shutdown_event() -> PycoEvent:
 	return event
 
 
+func _generate_user_id() -> String:
+	# OS.get_unique_id() returns a unique _hardware_ identifier on some
+	# platforms, so we try to scramble it a bit with some user-unique details.
+	# This should make it harder to match to hardware id-s from other sources.
+	#
+	# If you are reading this and you know a better way to do this,
+	# please hit me up on the github.
+	var hash_salt: String = ProjectSettings.get_setting_with_override(_Plugin.HASH_SALT_SETTING)
+	var unique_hash: String = str(OS.get_unique_id()).sha256_text().left(8)
+	var dir_hash: String = OS.get_data_dir().sha256_text().left(4)
+	var user_id: String = (unique_hash + dir_hash + hash_salt).sha256_text().left(8)
+	return user_id
+
+
 ## Logs an event, overriding event_type and values with the provided parameters
 func log_event_by_type(event_type: String, value: Dictionary = {}) -> void:
 	var event: PycoEvent = PycoEvent.copy_default()
@@ -129,7 +140,7 @@ func log_event_raw(pyco_event: PycoEvent) -> void:
 func _flush_queue() -> void:
 	if _event_queue.size() == 0 || _http_request.is_requesting:
 		return
-		
+
 	_last_flush = Time.get_ticks_msec()
 	var json_array: PackedStringArray
 	for event in _event_queue:
