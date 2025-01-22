@@ -2,10 +2,11 @@
 # 
 # Copyright (c) 2024 Swarkin & Kerekes Dávid
 
-class_name AwaitableHTTPRequest
-extends HTTPRequest
 ## Code adapted by Kerekes Dávid from:
 ## Awaitable HTTP Request Node v1.6.0 by swark1n & [url=https://github.com/Swarkin/Godot-AwaitableHTTPRequest/graphs/contributors]contributors[/url].
+
+class_name AwaitableHTTPRequest
+extends HTTPRequest
 
 signal request_finished		## Emits once the current request finishes, right after [member is_requesting] is set to false.
 var is_requesting := false  ## Whether the node is busy performing a request.
@@ -21,7 +22,7 @@ class HTTPResult extends RefCounted:
 
 	var status_code:int				## The response status code.
 	var headers_raw:PackedStringArray ## The response headers as a PackedStringArray.
-	var headers:Dictionary:			## The response headers as a dict.
+	var headers:Dictionary[String, String]:			## The response headers as a dict.
 		get: return _headers_to_dict(headers_raw)
 	var body:String:					## The response body as a [String].
 		get: return body_raw.get_string_from_utf8()
@@ -44,16 +45,16 @@ class HTTPResult extends RefCounted:
 		@warning_ignore('unsafe_cast') h.body_raw = a[3] as PackedByteArray
 		return h
 
-	static func _headers_to_dict(headers_arr: PackedStringArray) -> Dictionary:
-		var dict := {}
-		for h:String in headers_arr:
+	static func _headers_to_dict(headers_arr: PackedStringArray) -> Dictionary[String, String]:
+		var dict: Dictionary[String, String] = {}
+		for h: String in headers_arr:
 			var split := h.split(':')
 			dict[split[0]] = split[1].strip_edges()
 
 		return dict
 		
 	func _resolve_result_code(result:HTTPRequest.Result) -> String:
-		const strDict:Dictionary = {
+		const str_dict:Dictionary[HTTPRequest.Result, String] = {
 			HTTPRequest.Result.RESULT_SUCCESS : "RESULT_SUCCESS",
 			HTTPRequest.Result.RESULT_CHUNKED_BODY_SIZE_MISMATCH : "RESULT_CHUNKED_BODY_SIZE_MISMATCH",
 			HTTPRequest.Result.RESULT_CANT_CONNECT : "RESULT_CANT_CONNECT",
@@ -69,7 +70,7 @@ class HTTPResult extends RefCounted:
 			HTTPRequest.Result.RESULT_REDIRECT_LIMIT_REACHED : "RESULT_REDIRECT_LIMIT_REACHED",
 			HTTPRequest.Result.RESULT_TIMEOUT : "RESULT_TIMEOUT",
 		}
-		return strDict[_result]
+		return str_dict[_result]
 
 
 ## Performs an awaitable HTTP request.
