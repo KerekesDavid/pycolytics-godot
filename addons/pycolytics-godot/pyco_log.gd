@@ -1,11 +1,11 @@
 extends Node
 
 const _Plugin = preload("plugin.gd")
-var _event_queue: Array[PycoEvent]
+var _event_queue: PackedStringArray
 var _http_request: AwaitableHTTPRequest
 var _shutdown_initiated: bool = false
 var _last_flush: float
-var _url_suffix: String = "v1.0/events"
+const _url_suffix: String = "v1.0/events"
 
 var flush_period_msec: float = 2000.0  ## Send batched events to server at least this often.
 var queue_limit: int = 12  ## Send a batch of events if the queue is at least this long. Helps avoid frame stutter from too many events.
@@ -33,6 +33,8 @@ func _ready() -> void:
 	PycoEvent.default_event.session_id = (
 		(PycoEvent.default_event.user_id + str(Time.get_unix_time_from_system())).sha256_text()
 	)
+
+	_event_queue.resize(queue_limit)
 
 	startup_callable = _get_startup_event
 	shutdown_callable = _get_shutdown_event
@@ -127,14 +129,14 @@ func log_event(pyco_event: PycoEvent) -> void:
 ## Logs an event as it is. Use PycoEvent.copy_default().merge(...) to selectively override event properties.
 func log_event_raw(pyco_event: PycoEvent) -> void:
 	if !_shutdown_initiated:
-		_event_queue.push_back(pyco_event)
+		_event_queue.push_back(pyco_event.to_json())
 		if _event_queue.size() > queue_limit:
 			_flush_queue.call_deferred()
-	#else:
-		#push_warning(
-			#"PycoLog: Events logged after NOTIFICATION_WM_CLOSE_REQUEST are ignored: ",
-			#pyco_event.to_json()
-		#)
+	else:
+		push_warning(
+			"PycoLog: Events logged after NOTIFICATION_WM_CLOSE_REQUEST are ignored: ",
+			pyco_event.to_json()
+		)
 
 
 func _flush_queue() -> void:
@@ -142,10 +144,7 @@ func _flush_queue() -> void:
 		return
 
 	_last_flush = Time.get_ticks_msec()
-	var json_array: PackedStringArray
-	for event in _event_queue:
-		json_array.append(event.to_json())
-	var body: String = "[" + ",".join(json_array) + "]"
+	var body: String = "[" + ",".join(_event_queue) + "]"
 	_event_queue.clear()
 	var result := await _http_request.async_request(
 		url, PackedStringArray(), HTTPClient.Method.METHOD_POST, body
