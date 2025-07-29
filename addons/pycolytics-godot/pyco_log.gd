@@ -34,8 +34,6 @@ func _ready() -> void:
 		(PycoEvent.default_event.user_id + str(Time.get_unix_time_from_system())).sha256_text()
 	)
 
-	_event_queue.resize(queue_limit)
-
 	startup_callable = _get_startup_event
 	shutdown_callable = _get_shutdown_event
 
