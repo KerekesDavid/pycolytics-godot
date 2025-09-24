@@ -9,7 +9,6 @@ const SERVER_URL_SETTING := &"addons/pycolytics/server_url"
 const HASH_SALT_SETTING := &"addons/pycolytics/hash_salt"
 
 func _enter_tree() -> void:
-	EditorInterface.get_editor_settings()
 	if not ProjectSettings.has_setting(API_KEY_SETTING):
 		ProjectSettings.set_setting(API_KEY_SETTING, DEFAULT_API_KEY)
 	ProjectSettings.set_initial_value(API_KEY_SETTING, DEFAULT_API_KEY)

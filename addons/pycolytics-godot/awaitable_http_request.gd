@@ -70,7 +70,7 @@ class HTTPResult extends RefCounted:
 			HTTPRequest.Result.RESULT_REDIRECT_LIMIT_REACHED : "RESULT_REDIRECT_LIMIT_REACHED",
 			HTTPRequest.Result.RESULT_TIMEOUT : "RESULT_TIMEOUT",
 		}
-		return str_dict[_result]
+		return str_dict[result]
 
 
 ## Performs an awaitable HTTP request.

@@ -158,13 +158,13 @@ func _flush_queue() -> void:
 			"\nPycoLog: error while making a HTTP request to ", url,
 			"\n    Result code ", result._result, ": ", result.result_message,
 			"\n    HTTP status code: ", result.status_code,
-			"\n    Respose Headers: ", result.headers,
+			"\n    Response Headers: ", result.headers,
 			"\n    Response Body: ", result.body,
 		)
 	elif result.status_code > 400:
 		push_warning(
 			"\nPycoLog: Error reply from server ", url,
 			"\n    HTTP status code: ", result.status_code,
-			"\n    Respose Headers: ", result.headers,
+			"\n    Response Headers: ", result.headers,
 			"\n    Response Body: ", result.body,
 		)
