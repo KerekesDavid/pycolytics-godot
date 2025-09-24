@@ -11,8 +11,8 @@ var flush_period_msec: float = 2000.0  ## Send batched events to server at least
 var queue_limit: int = 12  ## Send a batch of events if the queue is at least this long. Helps avoid frame stutter from too many events.
 var request_timeout: float = 3.0  ## Number of seconds after which the event logging requests timeout. Will result in lost events.
 var url: String = _Plugin.DEFAULT_SERVER_URL + _url_suffix  ## The exact server url for accepting batch requests (eg. including "v1.0/events").
-var startup_callable: Callable  ## Callable returning a PycoEvent to send after the zeroth frame. Set to null to disable.
-var shutdown_callable: Callable  ## Callable returning a PycoEvent to send on NOTIFICATION_WM_CLOSE_REQUEST. Set to null to disable.
+var startup_callable: Callable  ## Callable returning a PycoEvent to send after the zeroth frame. Set to an empty Callable to disable.
+var shutdown_callable: Callable  ## Callable returning a PycoEvent to send on NOTIFICATION_WM_CLOSE_REQUEST. Set to an empty Callable to disable.
 
 signal shutdown_event_sent  ## Emitted after the shutdown event defined by shutdown_callable was sent.
 
@@ -51,7 +51,7 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		if _http_request.is_requesting:
 			await _http_request.request_finished
-		if shutdown_callable != null:
+		if not shutdown_callable.is_null():
 			log_event(shutdown_callable.call())
 		_shutdown_initiated = true
 		_flush_queue()
@@ -60,7 +60,7 @@ func _notification(what: int) -> void:
 
 
 func _log_startup() -> void:
-	if startup_callable != null:
+	if not startup_callable.is_null():
 		log_event(startup_callable.call())
 
 
