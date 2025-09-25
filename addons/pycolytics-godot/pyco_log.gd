@@ -1,6 +1,6 @@
 extends Node
 
-const _Plugin = preload("plugin.gd")
+const _Settings = preload("settings.gd")
 var _event_queue: PackedStringArray
 var _http_request: AwaitableHTTPRequest
 var _shutdown_initiated: bool = false
@@ -10,7 +10,7 @@ const _url_suffix: String = "v1.0/events"
 var flush_period_msec: float = 2000.0  ## Send batched events to server at least this often.
 var queue_limit: int = 12  ## Send a batch of events if the queue is at least this long. Helps avoid frame stutter from too many events.
 var request_timeout: float = 3.0  ## Number of seconds after which the event logging requests timeout. Will result in lost events.
-var url: String = _Plugin.DEFAULT_SERVER_URL + _url_suffix  ## The exact server url for accepting batch requests (eg. including "v1.0/events").
+var url: String = _Settings.DEFAULT_SERVER_URL + _url_suffix  ## The exact server url for accepting batch requests (eg. including "v1.0/events").
 var startup_callable: Callable  ## Callable returning a PycoEvent to send after the zeroth frame. Set to an empty Callable to disable.
 var shutdown_callable: Callable  ## Callable returning a PycoEvent to send on NOTIFICATION_WM_CLOSE_REQUEST. Set to an empty Callable to disable.
 
@@ -78,7 +78,7 @@ func _sync_project_settings() -> void:
 			&"addons/pycolytics/api_key"
 		)
 	else:
-		PycoEvent.default_event.api_key = _Plugin.DEFAULT_API_KEY
+		PycoEvent.default_event.api_key = _Settings.DEFAULT_API_KEY
 	if ProjectSettings.has_setting(&"addons/pycolytics/server_url"):
 		url = (
 			ProjectSettings.get_setting_with_override(&"addons/pycolytics/server_url") + _url_suffix
@@ -104,7 +104,7 @@ func _generate_user_id() -> String:
 	#
 	# If you are reading this and you know a better way to do this,
 	# please hit me up on the github.
-	var hash_salt: String = ProjectSettings.get_setting_with_override(_Plugin.HASH_SALT_SETTING)
+	var hash_salt: String = ProjectSettings.get_setting_with_override(_Settings.HASH_SALT_SETTING)
 	var unique_hash: String = str(OS.get_unique_id()).sha256_text().left(8)
 	var dir_hash: String = OS.get_data_dir().sha256_text().left(4)
 	var user_id: String = (unique_hash + dir_hash + hash_salt).sha256_text().left(8)
@@ -150,21 +150,36 @@ func _flush_queue() -> void:
 
 	if result._error:
 		push_warning(
-			"PycoLog: Error while creating HTTP connection to ", url,
-			". Error code ", result._error, ": ", error_string(result._error)
+			"PycoLog: Error while creating HTTP connection to ",
+			url,
+			". Error code ",
+			result._error,
+			": ",
+			error_string(result._error)
 		)
 	elif result._result:
 		push_warning(
-			"\nPycoLog: error while making a HTTP request to ", url,
-			"\n    Result code ", result._result, ": ", result.result_message,
-			"\n    HTTP status code: ", result.status_code,
-			"\n    Response Headers: ", result.headers,
-			"\n    Response Body: ", result.body,
+			"\nPycoLog: error while making a HTTP request to ",
+			url,
+			"\n    Result code ",
+			result._result,
+			": ",
+			result.result_message,
+			"\n    HTTP status code: ",
+			result.status_code,
+			"\n    Response Headers: ",
+			result.headers,
+			"\n    Response Body: ",
+			result.body,
 		)
 	elif result.status_code > 400:
 		push_warning(
-			"\nPycoLog: Error reply from server ", url,
-			"\n    HTTP status code: ", result.status_code,
-			"\n    Response Headers: ", result.headers,
-			"\n    Response Body: ", result.body,
+			"\nPycoLog: Error reply from server ",
+			url,
+			"\n    HTTP status code: ",
+			result.status_code,
+			"\n    Response Headers: ",
+			result.headers,
+			"\n    Response Body: ",
+			result.body,
 		)
