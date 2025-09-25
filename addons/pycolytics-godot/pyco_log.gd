@@ -11,8 +11,8 @@ var flush_period_msec: float = 2000.0  ## Send batched events to server at least
 var queue_limit: int = 12  ## Send a batch of events if the queue is at least this long. Helps avoid frame stutter from too many events.
 var request_timeout: float = 3.0  ## Number of seconds after which the event logging requests timeout. Will result in lost events.
 var url: String = _Settings.DEFAULT_SERVER_URL + _url_suffix  ## The exact server url for accepting batch requests (eg. including "v1.0/events").
-var startup_callable: Callable  ## Callable returning a PycoEvent to send after the zeroth frame. Set to an empty Callable to disable.
-var shutdown_callable: Callable  ## Callable returning a PycoEvent to send on NOTIFICATION_WM_CLOSE_REQUEST. Set to an empty Callable to disable.
+var startup_callable: Callable = _get_startup_event  ## Callable returning a PycoEvent to send after the zeroth frame. Set to an empty Callable to disable.
+var shutdown_callable: Callable = _get_shutdown_event  ## Callable returning a PycoEvent to send on NOTIFICATION_WM_CLOSE_REQUEST. Set to an empty Callable to disable.
 
 signal shutdown_event_sent  ## Emitted after the shutdown event defined by shutdown_callable was sent.
 
@@ -33,9 +33,6 @@ func _ready() -> void:
 	PycoEvent.default_event.session_id = (
 		(PycoEvent.default_event.user_id + str(Time.get_unix_time_from_system())).sha256_text()
 	)
-
-	startup_callable = _get_startup_event
-	shutdown_callable = _get_shutdown_event
 
 	_http_request = _create_request()
 
