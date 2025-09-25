@@ -1,20 +1,14 @@
 [gd_scene load_steps=4 format=3 uid="uid://bypgj3lg0b5wk"]
 
-[ext_resource type="Script" path="res://example/example.gd" id="1_cyob3"]
-[ext_resource type="Script" path="res://addons/pycolytics-godot/event_details.gd" id="2_o7v6y"]
+[ext_resource type="Script" uid="uid://bv2cyr2vma0au" path="res://example/example.gd" id="1_cyob3"]
+[ext_resource type="Script" uid="uid://bn4dsbhdm1y37" path="res://addons/pycolytics-godot/event_details.gd" id="2_o7v6y"]
 
 [sub_resource type="Resource" id="Resource_vv0r2"]
 script = ExtResource("2_o7v6y")
 event_type = "exported_event"
-application = ""
-version = ""
-platform = ""
-user_id = ""
-session_id = ""
 value = {
 Color(0, 0, 0, 1): Vector2i(0, 0)
 }
-api_key = ""
 
 [node name="Node2D" type="Node2D"]
 script = ExtResource("1_cyob3")
